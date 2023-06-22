@@ -1,0 +1,102 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the game window
+window_width = 800
+window_height = 600
+window = pygame.display.set_mode((window_width, window_height))
+pygame.display.set_caption("Fly Shooting Game")
+
+# Set up colors
+white = (255, 255, 255)
+black = (0, 0, 0)
+
+# Set up the player
+player_width = 50
+player_height = 50
+player_x = window_width // 2 - player_width // 2
+player_y = window_height - player_height
+player_speed = 5
+player = pygame.Rect(player_x, player_y, player_width, player_height)
+
+# Set up the fly
+fly_width = 30
+fly_height = 30
+fly_speed = 3
+flies = []
+for _ in range(6):
+    fly_x = random.randint(0, window_width - fly_width)
+    fly_y = random.randint(50, 200)
+    fly = pygame.Rect(fly_x, fly_y, fly_width, fly_height)
+    flies.append(fly)
+
+# Set up the game clock
+clock = pygame.time.Clock()
+
+# Set up the game variables
+score = 0
+level = 1
+game_over = False
+
+# Set up the game fonts
+font = pygame.font.SysFont(None, 36)
+
+# Game loop
+while not game_over:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            game_over = True
+
+    # Move the player
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        player.x -= player_speed
+    if keys[pygame.K_RIGHT]:
+        player.x += player_speed
+
+    # Update the game logic
+    for fly in flies:
+        fly.y += fly_speed
+
+        if fly.colliderect(player):
+            score += 1
+            flies.remove(fly)
+
+        if fly.y > window_height:
+            fly.x = random.randint(0, window_width - fly_width)
+            fly.y = random.randint(50, 200)
+
+    # Draw the game objects
+    window.fill(white)
+    pygame.draw.rect(window, black, player)
+    for fly in flies:
+        pygame.draw.rect(window, black, fly)
+
+    # Display the score and level
+    score_text = font.render("Score: " + str(score), True, black)
+    level_text = font.render("Level: " + str(level), True, black)
+    window.blit(score_text, (10, 10))
+    window.blit(level_text, (window_width - level_text.get_width() - 10, 10))
+
+    # Check if the player has reached the required score to level up
+    if score >= level * 5:
+        level += 1
+        fly_speed += 1
+        flies.append(pygame.Rect(random.randint(0, window_width - fly_width), random.randint(50, 200), fly_width, fly_height))
+
+    # Check if the game is over
+    if player.y < 50 or len(flies) == 0:
+        game_over = True
+
+    # Update the game display
+    pygame.display.update()
+    clock.tick(60)
+
+# Game over screen
+window.fill(white)
+game_over_text = font.render("Game Over", True, black)
+score_text = font.render("Final Score: " + str(score), True, black)
+window.blit(game_over_text, (window_width // 2 - game_over_text.get_width() // 2, window_height // 2 - 50))
